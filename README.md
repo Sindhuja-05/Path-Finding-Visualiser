@@ -1,6 +1,4 @@
 # Path-Finding-Visualiser
-A path finding project using pygame
-
 Objective of the project : Generate the most optimal path solution between two given points using A – star algorithm.
 
 1)Overview of the project
