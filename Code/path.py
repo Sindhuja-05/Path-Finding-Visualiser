@@ -380,50 +380,12 @@ def A_star(draw, grid, start, end, output, win, width):
             
     return visited, False
 
-def is_free(grid, x, y):
-    count = 0
-    if y+1 < len(grid) and grid[x][y+1].is_barrier() :
-        count +=1
-    if y-1>=0 and grid[x][y-1].is_barrier():
-        count +=1
-    if x+1 < len(grid) and grid[x+1][y].is_barrier():
-        count+=1
-    if x-1>=0 and grid[x-1][y].is_barrier():
-        count+=1
-    if count >= 3:
-        return True
-    return False
-
-def unvisited_n(grid, x, y):
-    n = []
-    if y+1 < len(grid) and grid[x][y+1].is_barrier() and is_free(grid, x, y+1):
-        n.append((x, y+1))
-    if y-1>=0 and grid[x][y-1].is_barrier() and is_free(grid, x, y-1):
-        n.append((x, y-1))
-    if x+1 < len(grid) and grid[x+1][y].is_barrier() and is_free(grid, x+1, y):
-        n.append((x+1, y))
-    if x-1>=0 and grid[x-1][y].is_barrier() and is_free(grid, x-1, y):
-        n.append((x-1, y))
-    return n
-
 def make_black(grid, win):
     for row in grid:
         for node in row:
             node.make_barrier()
             node.draw(win)
     pygame.display.update()
-
-def is_open_up(grid, li, win, width):
-    n = []
-    for x, y in li:
-        if grid[x][y-1].is_neutral():
-            n.append(grid[x][y])
-    if len(n)>0:
-        node = np.random.choice(n)
-        node.reset()
-        node.draw(win)
-        draw_grid(win, len(grid), width)
-        pygame.display.update()
 
 def recursive_maze(draw, width, grid, start, end, left, right, top, bottom, win):
     if right-left >= 1 and bottom-top >=1:
@@ -527,119 +489,6 @@ def recursive_maze(draw, width, grid, start, end, left, right, top, bottom, win)
             recursive_maze(draw, width, grid, start, end, left, br, rand+1, bottom, win)
             recursive_maze(draw, width, grid, start, end, br+1, right, top, rand, win)
             recursive_maze(draw, width, grid, start, end, br+1, right, rand+1, bottom, win)
-
-def recursive_weight_maze(draw, width, grid, start, end, left, right, top, bottom, win):
-    weighted = []
-    if right-left >= 1 and bottom-top >=1:
-        vertical = True
-        test = False
-        if right-left >= bottom-top:
-            if bottom-top == 1:
-                if (bottom < len(grid) and grid[left][bottom].is_weight()) and (top-1 >= 0 and grid[left][top-1].is_weight()):
-                    vertical = False
-            if vertical == True:
-                l = left
-                r = right
-                if left-1>=0 and grid[left-1][top].is_weight():
-                    l = left+1
-                if right<50 and grid[right][top].is_weight():
-                    r = right-1
-                if l >= r:
-                    vertical = False 
-            if vertical == True:
-                test = True
-#                 print("--->", l, r)
-                rand = np.random.randint(l, r)
-                if top<bottom and ((bottom - top <= 3) or (top-1 >= 0 and grid[left][top-1].is_neutral() and bottom < len(grid) and grid[left][bottom].is_neutral())):
-                    br = bottom
-                if top+1 < bottom-1:
-                    br = np.random.randint(top+1, bottom-1)
-                elif top+1 == bottom-1:
-                    br = top+1
-                else:
-                    br = bottom
-                
-        elif right-left <= bottom-top:
-            if right-left == 1:
-                if (right < len(grid) and grid[right][top].is_weight()) and (left-1 >= 0 and grid[left-1][top].is_weight()):
-                    return weighted
-            t = top
-            b = bottom
-            if top-1>= 0 and grid[left][top-1].is_weight():
-                t = top+1
-            if bottom < 50 and grid[left][bottom].is_weight():
-                b = bottom-1
-            if t >= b:
-                return weighted
-            test = True
-#             print("--->", t, b)
-            rand = np.random.randint(t, b)
-            if left<right and ((right - left<= 3) or (left-1 >= 0 and grid[left-1][bottom].is_neutral() and right < len(grid) and grid[right][bottom].is_neutral())):
-                    br = bottom
-            if left+1 < right-1:
-                br = np.random.randint(left+1, right-1)
-            elif left+1 == right-1:
-                br = left+1
-            else:
-                br = right
-            vertical = False
-        if test == False:
-            return weighted
-        prob = 3
-        if vertical:
-            for y in range(top, br):
-#                 print(rand, y)
-                grid[rand][y].make_weight()
-                weighted.append(grid[rand][y])
-                draw()
-            if not np.random.randint(prob) and br - top <= 2:
-                grid[rand][y+1].make_weight()
-                weighted.append(grid[rand][y+1])
-                draw()
-            for y in range(br+1, bottom):
-#                 print(rand, y)
-                grid[rand][y].make_weight()
-                weighted.append(grid[rand][y])
-                draw()
-        else:
-            for x in range(left, br):
-                grid[x][rand].make_weight()
-                weighted.append(grid[x][rand])
-                draw()
-            if not np.random.randint(prob) and br - left <= 2:
-                grid[x+1][rand].make_weight()
-                weighted.append(grid[x+1][rand])
-                draw()
-            for x in range(br+1, right):
-                grid[x][rand].make_weight()
-                weighted.append(grid[x][rand])
-                draw()
-        if vertical:
-            weighted += recursive_weight_maze(draw, width, grid, start, end, rand+1, right, top, br, win)
-            weighted += recursive_weight_maze(draw, width, grid, start, end, left, rand, top, br, win)
-            weighted += recursive_weight_maze(draw, width, grid, start, end, rand+1, right, br+1, bottom, win)
-            weighted += recursive_weight_maze(draw, width, grid, start, end, left, rand, br+1, bottom, win)
-        else:
-            weighted += recursive_weight_maze(draw, width, grid, start, end, left, br, top, rand, win)
-            weighted += recursive_weight_maze(draw, width, grid, start, end, left, br, rand+1, bottom, win)
-            weighted += recursive_weight_maze(draw, width, grid, start, end, br+1, right, top, rand, win)
-            weighted += recursive_weight_maze(draw, width, grid, start, end, br+1, right, rand+1, bottom, win)
-    return weighted
-
-def recursive_weight_div(draw, width, grid, start, end, left, right, top, bottom, win, break_at = 0):
-    li = []
-    for i in range(right):
-        grid[0][i].make_weight()
-        li.append(grid[0][i])
-        grid[bottom-1][right-1-i].make_weight()
-        draw()
-    for i in range(bottom-1):
-        grid[i][0].make_weight()
-        li.append(grid[i][0])
-        grid[bottom-1-i][right-1].make_weight()
-        draw()
-    li += recursive_weight_maze(draw, width, grid, start, end, left+1, right-1, top+1, bottom-1, win)
-    return li
 
 def recursive_div(draw, width, grid, start, end, left, right, top, bottom, win, break_at = 0):
     for i in range(right):
